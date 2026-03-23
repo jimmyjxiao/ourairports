@@ -11,8 +11,8 @@ class Airport(object):
         self.name = name
         self.type = type
         # location data
-        self.latitude = latitude
-        self.longitude = longitude
+        self.latitude = float(latitude)
+        self.longitude = float(longitude)
         self.elevation = elevation
         self.continent = continent
         self.country = country
@@ -95,7 +95,13 @@ class OurAirports:
         return [x for x in self.airports if x.iata == iata]
 
     def getAirportsByDistance(self, lat, lon, distance):
-        return [x for x in self.airports if geodesic((x.latitude, x.longitude), (lat, lon)).miles < distance]
+        lat_float = float(lat)
+        lon_float = float(lon)
+        bounding_box_degree_tolerance = math.ceil(distance / 69) * 2
+        airports_in_bounding_box = [x for x in self.airports if abs(x.latitude - lat_float) <= bounding_box_degree_tolerance and abs(x.longitude - lon_float) <= bounding_box_degree_tolerance]
+        airports_with_distances = [(x, geodesic((x.latitude, x.longitude), (lat_float, lon_float)).miles) for x in airports_in_bounding_box]
+        filtered_sorted_airports = sorted(((x, d) for x, d in airports_with_distances if d < distance), key=lambda x: x[1])
+        return [x for x, d in filtered_sorted_airports]
 
     def getFrequencies(self, airport):
         if not isinstance(airport, Airport):
